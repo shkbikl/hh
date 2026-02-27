@@ -1,0 +1,9 @@
+{
+  "appId": "com.openclaw.chat",
+  "appName": "OpenClaw Chat",
+  "webDir": "www",
+  "server": {
+    "url": "http://43.110.16.63:3000",
+    "cleartext": true
+  }
+}

@@ -1,0 +1,16 @@
+[Unit]
+Description=OpenClaw Web Chat Upload Server
+After=network.target
+
+[Service]
+Type=simple
+User=admin
+WorkingDirectory=/home/admin/.openclaw/workspace/web-chat
+ExecStart=/usr/bin/node upload-server.js
+Restart=always
+RestartSec=5
+StandardOutput=append:/tmp/upload-server.log
+StandardError=append:/tmp/upload-server.log
+
+[Install]
+WantedBy=multi-user.target

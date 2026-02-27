@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>连接测试</title>
+<style>
+body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+button { padding: 10px 20px; margin: 5px; font-size: 14px; cursor: pointer; }
+#log { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px; }
+.success { color: green; }
+.error { color: red; }
+</style>
+</head>
+<body>
+<h1>🦞 OpenClaw 连接测试</h1>
+
+<h3>1. 测试 HTTP 连接</h3>
+<button onclick="testHttp()">测试 Gateway HTTP</button>
+<div id="http-result"></div>
+
+<h3>2. 测试 WebSocket 连接</h3>
+<button onclick="testWs()">测试 WebSocket</button>
+<div id="ws-result"></div>
+
+<h3>3. 日志</h3>
+<div id="log"></div>
+
+<script>
+function log(msg, type = '') {
+  const div = document.createElement('div');
+  div.className = type;
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  document.getElementById('log').appendChild(div);
+}
+
+async function testHttp() {
+  const result = document.getElementById('http-result');
+  result.innerHTML = '测试中...';
+  log('开始测试 HTTP 连接...');
+  
+  try {
+    const response = await fetch('http://43.110.16.63:17058/health', {
+      method: 'GET',
+      mode: 'no-cors'
+    });
+    result.innerHTML = '<span class="success">✅ HTTP 可达 (端口开放)</span>';
+    log('HTTP 测试成功');
+  } catch (e) {
+    result.innerHTML = '<span class="error">❌ HTTP 失败：' + e.message + '</span>';
+    log('HTTP 测试失败：' + e.message, 'error');
+  }
+}
+
+function testWs() {
+  const result = document.getElementById('ws-result');
+  result.innerHTML = '测试中...';
+  log('开始测试 WebSocket 连接...');
+  
+  const endpoints = [
+    'ws://43.110.16.63:17058/ws',
+    'ws://43.110.16.63:17058/agent',
+    'ws://43.110.16.63:17058/v1/chat/completions'
+  ];
+  
+  let tested = 0;
+  
+  endpoints.forEach(url => {
+    log(`尝试连接：${url}`);
+    const ws = new WebSocket(url);
+    
+    ws.onopen = () => {
+      result.innerHTML = `<span class="success">✅ WebSocket 成功：${url}</span>`;
+      log(`WebSocket 连接成功：${url}`, 'success');
+      ws.close();
+    };
+    
+    ws.onerror = () => {
+      log(`WebSocket 失败：${url}`, 'error');
+      tested++;
+      if (tested === endpoints.length) {
+        result.innerHTML = '<span class="error">❌ 所有端点都失败</span>';
+      }
+    };
+    
+    ws.onclose = () => {
+      tested++;
+    };
+  });
+}
+</script>
+</body>
+</html>
