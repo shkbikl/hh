@@ -31,14 +31,15 @@ jobs:
     - name: Install dependencies
       run: npm install
     
+    - name: Copy web assets to Android
+      run: |
+        npx cap copy android
+    
     - name: Build Android
       run: |
-        echo "Checking android directory..."
-        ls -la android/
         cd android
         chmod +x gradlew
-        echo "Building APK..."
-        ./gradlew assembleDebug --stacktrace
+        ./gradlew assembleDebug
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
