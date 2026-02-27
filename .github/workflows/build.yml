@@ -31,13 +31,13 @@ jobs:
     - name: Install dependencies
       run: npm install
     
-    - name: Sync Capacitor
-      run: npx cap sync android
-    
     - name: Build Android
       run: |
+        echo "Checking android directory..."
+        ls -la android/
         cd android
         chmod +x gradlew
+        echo "Building APK..."
         ./gradlew assembleDebug --stacktrace
     
     - name: Upload APK
