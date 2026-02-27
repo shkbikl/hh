@@ -1,5 +1,5 @@
 node_modules/
-www/
+# www/ removed - needed for GitHub Actions build
 *.zip
 *.log
 .DS_Store
