@@ -20,15 +20,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Setup Capacitor
-        run: |
-          rm -rf android/
-          npx cap add android
-          npx cap sync android
-
       - name: Build
         run: |
           cd android
