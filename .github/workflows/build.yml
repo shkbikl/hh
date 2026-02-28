@@ -10,21 +10,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-    
+
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '21'
-    
+
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
@@ -32,28 +33,36 @@ jobs:
         build-tools: 34.0.0
         cmake: 3.10.2.4988404
         ndk: 25.1.8937393
-    
+
+    - name: Accept Android SDK licenses
+      run: yes | sdkmanager --licenses || echo "Licenses already accepted"
+
     - name: Install dependencies
       run: npm install
-    
+
     - name: Prepare web assets
       run: |
         mkdir -p android/app/src/main/assets/public
         cp www/* android/app/src/main/assets/public/
-    
-    - name: Accept licenses
-      run: |
-        yes | sdkmanager --licenses || true
-    
-    - name: Build Android
+        echo "Assets copied:"
+        ls -la android/app/src/main/assets/public/
+
+    - name: Build Android APK
       run: |
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon --stacktrace
-    
+
     - name: Upload APK
       uses: actions/upload-artifact@v4
+      if: success()
       with:
         name: app-debug
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
+
+    - name: Build logs
+      if: failure()
+      run: |
+        echo "Build failed. Checking for errors..."
+        cd android && cat build.log 2>/dev/null || echo "No build log found"
