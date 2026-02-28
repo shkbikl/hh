@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.openclaw.chat"
+    namespace "com.openclaw.chat"
     compileSdk 34
 
     defaultConfig {
@@ -13,8 +13,17 @@ android {
     }
 
     buildTypes {
+        debug {
+            debuggable true
+        }
         release {
             minifyEnabled false
+        }
+    }
+    
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFileName = "app-${variant.name}.apk"
         }
     }
 }
