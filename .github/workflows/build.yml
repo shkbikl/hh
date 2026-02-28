@@ -33,8 +33,11 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Sync Capacitor
-      run: npx cap sync android
+    - name: Prepare Android platform
+      run: |
+        npx cap remove android || true
+        npx cap add android
+        npx cap sync android
 
     - name: Build APK
       run: |
