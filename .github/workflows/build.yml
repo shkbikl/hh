@@ -25,6 +25,9 @@ jobs:
         java-version: '21'
         cache: 'gradle'
 
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
     - name: Install dependencies
       run: npm install
 
@@ -38,12 +41,11 @@ jobs:
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 || true
-        ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "APK not found"
-        ls -la app/build/ 2>/dev/null || echo "Build dir not found"
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
+      if: success()
       with:
         name: app-debug
         path: android/app/build/outputs/apk/debug/app-debug.apk
