@@ -33,7 +33,9 @@ jobs:
     
     - name: Copy web assets to Android
       run: |
-        npx cap copy android
+        echo "Copying www/ to android/app/src/main/assets/public..."
+        cp -r www/* android/app/src/main/assets/public/ || true
+        ls -la android/app/src/main/assets/public/
     
     - name: Build Android
       run: |
