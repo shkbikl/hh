@@ -8,45 +8,48 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
-        distribution: 'temurin'
-        java-version: '21'
+        java-version: '17'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+    - name: Install Android SDK
+      run: |
+        mkdir -p $HOME/android-sdk
+        cd $HOME/android-sdk
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        mkdir -p latest
+        mv cmdline-tools/* latest/
+        echo "yes" | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+      env:
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 
-    - name: Set ANDROID_HOME
-      run: echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+    - name: Set environment
+      run: |
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools" >> $GITHUB_ENV
 
-    - name: Install dependencies
+    - name: Install npm dependencies
       run: npm install
 
-    - name: Copy web assets
-      run: |
-        mkdir -p android/app/src/main/assets/public
-        cp -r www/* android/app/src/main/assets/public/
-        cp capacitor.config.json android/app/src/main/assets/
+    - name: Generate android
+      run: npx cap add android
 
-    - name: Clean Gradle
-      run: cd android && ./gradlew clean || true
+    - name: Sync
+      run: npx cap sync android
 
-    - name: Build APK
+    - name: Build
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --no-build-cache
+        ./gradlew assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -54,4 +57,3 @@ jobs:
       with:
         name: app-debug
         path: android/app/build/outputs/apk/debug/app-debug.apk
-        retention-days: 30
