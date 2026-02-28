@@ -21,13 +21,15 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Build
-        working-directory: android
         run: |
+          cd android
           chmod +x gradlew
           ./gradlew assembleDebug
+          ls -la app/build/outputs/apk/debug/
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: openclaw-chat
+          name: openclaw-chat.apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
