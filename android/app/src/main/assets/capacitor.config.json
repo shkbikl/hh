@@ -1,0 +1,27 @@
+{
+	"appId": "com.openclaw.chat",
+	"appName": "OpenClaw Chat",
+	"webDir": "www",
+	"server": {
+		"url": "http://43.110.16.63:3000",
+		"cleartext": true
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 0,
+			"launchAutoHide": true,
+			"backgroundColor": "#4a7a4a",
+			"androidSplashResourceName": "splash",
+			"androidScaleType": "CENTER_CROP",
+			"showSpinner": false,
+			"androidSpinnerStyle": "large",
+			"iosSpinnerStyle": "large",
+			"spinnerColor": "#ffffff",
+			"splashShowDuration": 2000,
+			"splashFullScreen": true,
+			"splashImmersive": true,
+			"layoutName": "launch_screen",
+			"useDialog": true
+		}
+	}
+}
