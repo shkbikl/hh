@@ -23,10 +23,12 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
-        cache: 'gradle'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+
+    - name: Set ANDROID_HOME
+      run: echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
 
     - name: Install dependencies
       run: npm install
@@ -37,11 +39,14 @@ jobs:
         cp -r www/* android/app/src/main/assets/public/
         cp capacitor.config.json android/app/src/main/assets/
 
+    - name: Clean Gradle
+      run: cd android && ./gradlew clean || true
+
     - name: Build APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon --no-build-cache
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
