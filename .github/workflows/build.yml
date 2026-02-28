@@ -8,48 +8,36 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
+    - name: Set up Docker
+      run: sudo apt-get update && sudo apt-get install -y docker.io
 
-    - name: Install Android SDK
+    - name: Build with Gradle Docker
       run: |
-        mkdir -p $HOME/android-sdk
-        cd $HOME/android-sdk
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip
-        mkdir -p latest
-        mv cmdline-tools/* latest/
-        echo "yes" | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-
-    - name: Set environment
-      run: |
-        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools" >> $GITHUB_ENV
-
-    - name: Install npm dependencies
-      run: npm install
-
-    - name: Generate android
-      run: npx cap add android
-
-    - name: Sync
-      run: npx cap sync android
-
-    - name: Build
-      run: |
-        cd android
-        chmod +x gradlew
-        ./gradlew assembleDebug
+        docker run --rm \
+          -v ${{ github.workspace }}:/workspace \
+          -w /workspace \
+          gradle:8.7-jdk17 \
+          bash -c "
+            apt-get update && apt-get install -y wget unzip android-sdk
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip
+            unzip -q /tmp/cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
+            mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
+            yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+            /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager 'platform-tools' 'platforms;android-34' 'build-tools;34.0.0'
+            export ANDROID_HOME=/opt/android-sdk
+            export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+            npm install
+            npx cap add android
+            npx cap sync android
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          "
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
