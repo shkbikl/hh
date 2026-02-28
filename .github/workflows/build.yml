@@ -7,37 +7,46 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Docker
-      run: sudo apt-get update && sudo apt-get install -y docker.io
-
-    - name: Build with Gradle Docker
+    - name: Install system packages
       run: |
-        docker run --rm \
-          -v ${{ github.workspace }}:/workspace \
-          -w /workspace \
-          gradle:8.7-jdk17 \
-          bash -c "
-            apt-get update && apt-get install -y wget unzip android-sdk
-            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip
-            unzip -q /tmp/cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
-            mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
-            yes | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-            /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager 'platform-tools' 'platforms;android-34' 'build-tools;34.0.0'
-            export ANDROID_HOME=/opt/android-sdk
-            export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
-            npm install
-            npx cap add android
-            npx cap sync android
-            cd android
-            chmod +x gradlew
-            ./gradlew assembleDebug
-          "
+        sudo apt-get update
+        sudo apt-get install -y openjdk-17-jdk wget unzip
+        export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+        echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+
+    - name: Setup Android SDK
+      run: |
+        mkdir -p $HOME/android-sdk
+        cd $HOME/android-sdk
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        mkdir -p cmdline-tools/latest
+        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
+        yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+
+    - name: Install npm deps
+      run: npm install
+
+    - name: Run Capacitor
+      run: |
+        export ANDROID_HOME=$HOME/android-sdk
+        npx cap add android
+
+    - name: Build
+      run: |
+        export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+        export ANDROID_HOME=$HOME/android-sdk
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleDebug -Pandroid.useAndroidX=true
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
