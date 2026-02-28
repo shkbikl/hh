@@ -20,22 +20,15 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build with full debug
+      - name: Build
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --info --stacktrace --debug 2>&1 | tee build.log || cat build.log
+          ./gradlew assembleDebug
+          ls -la app/build/outputs/apk/debug/
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4
-        if: success()
+        uses: actions/upload-artifact@v3
         with:
-          name: apk
+          name: openclaw-chat
           path: android/app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Upload build log
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: android/build.log
