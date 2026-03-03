@@ -343,12 +343,14 @@
       <div class="form-group">
         <label class="form-label">API 地址</label>
         <input type="text" id="setting-gateway" class="form-input" placeholder="留空使用默认">
+        <small style="color: #999; display: block; margin-top: 4px;">留空将自动使用当前服务器的代理（推荐）</small>
       </div>
       <div class="form-group">
         <label class="form-label">API Key</label>
         <input type="password" id="setting-apikey" class="form-input" placeholder="sk-...">
       </div>
       <div class="modal-actions">
+        <button class="btn btn-danger" onclick="app.resetConfig()" style="margin-right: auto; background: #ff4757;">重置配置</button>
         <button class="btn btn-secondary" onclick="app.hideSettings()">取消</button>
         <button class="btn btn-primary" onclick="app.saveSettings()">保存</button>
       </div>
@@ -871,13 +873,28 @@
       }
 
       function saveSettings() {
+        const g = document.getElementById('setting-gateway');
         const k = document.getElementById('setting-apikey');
+        if (g && g.value.trim()) {
+          window.CONFIG.gatewayUrl = g.value.trim();
+        }
         if (k && k.value.trim()) {
           window.CONFIG.apiKey = k.value.trim();
-          saveConfig(window.CONFIG);
         }
+        saveConfig(window.CONFIG);
         hideSettings();
         log('💾 设置已保存');
+        log('📡 API 地址: ' + (window.CONFIG.gatewayUrl || '默认'));
+      }
+
+      function resetConfig() {
+        if (confirm('确定重置所有配置到默认值？')) {
+          localStorage.removeItem('openclaw-config');
+          window.CONFIG = loadConfig();
+          updateSettingsUI();
+          log('🔄 配置已重置');
+          log('📡 默认地址: ' + window.CONFIG.gatewayUrl);
+        }
       }
 
       return {
@@ -892,7 +909,8 @@
         toggleLog,
         showSettings,
         hideSettings,
-        saveSettings
+        saveSettings,
+        resetConfig
       };
     })();
 
