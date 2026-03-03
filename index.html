@@ -675,7 +675,11 @@
         updateStatus('处理中...', true);
 
         try {
-          const response = await fetch('/v1/chat/completions', {
+          const requestUrl = (window.CONFIG.gatewayUrl || '').replace(/\/$/, '') + '/v1/chat/completions';
+          log('📡 请求 URL: ' + requestUrl);
+          log('📡 API Key: ' + (window.CONFIG.apiKey ? window.CONFIG.apiKey.substring(0, 10) + '...' : '未设置'));
+
+          const response = await fetch(requestUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
