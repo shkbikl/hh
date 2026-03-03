@@ -352,7 +352,16 @@
         <button class="btn btn-secondary" onclick="app.hideSettings()">取消</button>
         <button class="btn btn-primary" onclick="app.saveSettings()">保存</button>
       </div>
-      <div id="log"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="log-modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-title">📋 日志</div>
+      <div id="log" style="max-height: 300px;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="app.hideLogModal()">关闭</button>
+      </div>
     </div>
   </div>
 
@@ -371,7 +380,6 @@
           const time = new Date().toLocaleTimeString();
           logEl.innerHTML += `[${time}] ${msg}\n`;
           logEl.scrollTop = logEl.scrollHeight;
-          logEl.classList.add('show');
         }
         console.log('[WebChat]', msg);
       }
@@ -387,6 +395,9 @@
         els.fileInput = document.getElementById('file-input');
         els.footer = document.querySelector('footer');
         els.chatContainer = document.getElementById('chat-container');
+
+        log('🚀 开始初始化...');
+        log('📦 配置: ' + JSON.stringify(window.CONFIG));
 
         loadMessages();
         updateSettingsUI();
@@ -675,6 +686,7 @@
         updateStatus('处理中...', true);
 
         try {
+          log('📤 发送请求到: ' + window.CONFIG.gatewayUrl + '/v1/chat/completions');
           const response = await fetch('/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -682,18 +694,20 @@
               'Authorization': 'Bearer ' + window.CONFIG.apiKey
             },
             body: JSON.stringify({
-              model: 'openclaw:main',
+              model: 'bailian:glm-4.7',
               messages: [...history, { role: 'user', content: fullContent }],
               stream: false
             })
           });
 
+          log('📥 响应状态: ' + response.status);
           if (!response.ok) {
             throw new Error('HTTP ' + response.status);
           }
 
           const data = await response.json();
           const reply = data.choices?.[0]?.message?.content || '无回复';
+          log('✅ 收到回复');
 
           // 移除加载
           const loadingEl = document.getElementById(loadingId);
@@ -831,8 +845,13 @@
       }
 
       function toggleLog() {
-        const logEl = document.getElementById('log');
-        if (logEl) logEl.classList.toggle('show');
+        const modal = document.getElementById('log-modal');
+        if (modal) modal.classList.add('active');
+      }
+
+      function hideLogModal() {
+        const modal = document.getElementById('log-modal');
+        if (modal) modal.classList.remove('active');
       }
 
       function showSettings() {
