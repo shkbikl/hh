@@ -2,7 +2,8 @@
 
 const DEFAULT_CONFIG = {
   // Gateway WebSocket 地址
-  gatewayUrl: 'ws://' + window.location.hostname + ':15823',
+  // 注意：Capacitor 应用应使用相对路径，通过 3000 端口代理到 15823
+  gatewayUrl: window.location.protocol + '//' + window.location.host,
   
   // API Key（Gateway Token）
   apiKey: '1ab581483035706a8289c7e5f2e8b00b',
